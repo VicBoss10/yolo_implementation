@@ -1,9 +1,11 @@
 from flask import Flask, Response
-from yolo_service import generar_frames, liberar_recursos
+from flask_cors import CORS  
+from services.yolo_service import generar_frames, liberar_recursos
 import signal
 import sys
 
 app = Flask(__name__)
+CORS(app)  
 
 def signal_handler(signal_received, frame):
     """Maneja la interrupción para liberar recursos."""

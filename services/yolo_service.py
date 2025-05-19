@@ -1,7 +1,33 @@
 from ultralytics import YOLO
 import cv2
 import time
-from keycloak_token import send_detection_to_backend
+from services.keycloak_token import send_detection_to_backend
+import subprocess
+import re
+
+def get_camera_index_by_base_name(camera_base_name):
+    result = subprocess.run(['v4l2-ctl', '--list-devices'], stdout=subprocess.PIPE, text=True)
+    lines = result.stdout.splitlines()
+    index = -1
+    for i, line in enumerate(lines):
+        # Extraer la parte base antes del primer paréntesis o dos puntos
+        base = re.split(r'[:(]', line)[0].strip()
+        if camera_base_name.strip() == base:
+            # Buscar la línea siguiente que contiene /dev/videoX
+            for j in range(i+1, len(lines)):
+                match = re.search(r'/dev/video(\d+)', lines[j])
+                if match:
+                    index = int(match.group(1))
+                    return index
+    return None
+
+# Leer el nombre de la cámara desde el archivo
+with open("selected_camera.txt", "r") as f:
+    nombre_base = f.read().strip()
+
+indice = get_camera_index_by_base_name(nombre_base)
+if indice is None:
+    raise RuntimeError(f"No se encontró la cámara con nombre base: {nombre_base}")
 
 # Configuración para comparación de detecciones
 MIN_INTERVAL_SECONDS = 5  # Intervalo mínimo entre envíos
@@ -16,7 +42,8 @@ previous_detections = []
 model = YOLO("yolo11n.pt")
 
 # Inicializar cámara
-cap = cv2.VideoCapture(0)
+print(f"Abriendo cámara con índice: {indice}")
+cap = cv2.VideoCapture(indice)
 if not cap.isOpened():
     raise RuntimeError("No se pudo abrir la cámara")
 
@@ -42,6 +69,7 @@ def are_detections_different(current_detections, previous_detections):
         return True
 
     if len(current_detections) != len(previous_detections):
+        
         return True
 
     for curr, prev in zip(current_detections, previous_detections):
@@ -88,7 +116,7 @@ def generar_frames():
 
         # Comparar y enviar detecciones si son diferentes
         if detected_objects and are_detections_different(detected_objects, previous_detections):
-            if sendຊ_detection_to_backend(detected_objects):
+            if send_detection_to_backend(detected_objects):
                 last_sent_time = time.time()
                 previous_detections = detected_objects.copy()
 
@@ -100,3 +128,4 @@ def generar_frames():
 
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+    
