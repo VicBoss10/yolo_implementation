@@ -5,7 +5,6 @@ import cv2
 model = YOLO("yolo11n.pt")
 
 video_path = "./inputs/1.mp4" 
-output_path = "./outputs/1_detected.mp4"
 
 cap = cv2.VideoCapture(video_path)
 
