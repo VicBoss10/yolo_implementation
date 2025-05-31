@@ -5,6 +5,7 @@ import os
 import cv2
 from ultralytics import YOLO
 import requests
+import signal
 
 app = Flask(__name__)
 CORS(app) 
@@ -16,12 +17,13 @@ def start_stream():
     if not nombre_camara:
         return jsonify({"error": "No se recibió el nombre de la cámara"}), 400
 
-    # Guardar el nombre en el archivo
     with open("selected_camera.txt", "w") as f:
         f.write(nombre_camara.strip())
 
-    # Lanzar app.py (en segundo plano)
-    subprocess.Popen(["python3", "app.py"])
+    # Lanzar app.py y guardar el PID
+    proc = subprocess.Popen(["python3", "app.py"])
+    with open("stream_pid.txt", "w") as f:
+        f.write(str(proc.pid))
     return jsonify({"status": "stream iniciado"}), 200
 
 @app.route('/videourl', methods=['POST'])
@@ -39,5 +41,17 @@ def run_videourl():
     ])
     return jsonify({"status": "VideoUrl.py ejecutado"}), 200
 
+@app.route('/stop', methods=['POST'])
+def stop_stream():
+    try:
+        with open("stream_pid.txt", "r") as f:
+            pid = int(f.read().strip())
+        os.kill(pid, signal.SIGTERM)
+        return jsonify({"status": "stream detenido"}), 200
+    except Exception as e:
+        return jsonify({"error": f"No se pudo detener el stream: {e}"}), 500
+
+
+
 if __name__ == "__main__":
-    app.run(port=5001)
+    app.run(port=5001)  
