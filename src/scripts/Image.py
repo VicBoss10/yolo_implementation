@@ -1,11 +1,15 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
 from ultralytics import YOLO
-from services.keycloak_token import send_detection_to_backend  # Importa la función reutilizable
+from src.services.keycloak_token import send_detection_to_backend  # Importa la función reutilizable
 
 # Cargar el modelo de YOLO
 model = YOLO("yolo11n.pt")
 
 # Especificar el path de las imágenes
-source = ["./inputs/4.jpg"]
+source = ["./inputs/4.jpeg"]
 
 def process_images():
     """Procesa las imágenes y envía las detecciones al backend."""

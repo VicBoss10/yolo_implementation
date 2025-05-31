@@ -1,7 +1,7 @@
 from ultralytics import YOLO
 import cv2
 import time
-from services.keycloak_token import send_detection_to_backend
+from src.services.keycloak_token import send_detection_to_backend
 import subprocess
 import re
 

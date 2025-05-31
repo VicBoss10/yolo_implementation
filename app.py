@@ -1,6 +1,6 @@
 from flask import Flask, Response, request, jsonify
 from flask_cors import CORS  
-from services.yolo_service import generar_frames, liberar_recursos
+from src.scripts.Stream import generar_frames, liberar_recursos
 import signal
 import sys
 
@@ -33,7 +33,7 @@ def set_camera():
     return jsonify({"message": f"Cámara seleccionada: {nombre_camara}"}), 200
 
 if __name__ == "__main__":
-    print("Servidor Flask corriendo en http://localhost:500/video")
+    print("Servidor Flask corriendo en http://localhost:5000/video")
     try:
         app.run(host="0.0.0.0", port=5000)
     finally:
